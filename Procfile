@@ -1,0 +1,1 @@
+web: gunicorn FlaskHomework11:app
