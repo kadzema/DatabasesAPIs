@@ -28,16 +28,28 @@ app = Flask(__name__)
 #################################################
 # Flask Routes
 #################################################
+@app.route("/")
+def welcome():
+    p="<p>Click <a href='/api/v1.0/precipitation'>Here</a> for the Precipitation API</p>"
+    s = "<p>Click <a href='/api/v1.0/stations'>Here</a> for the Stations API</p>"
+    t = "<p>Click <a href='/api/v1.0/tobs'>Here</a> for the Temperature Observations API</p>"
+    d = "<p>Click <a href='/api/v1.0/'>Here</a> and enter a start date at the end of the url for the Daily Normals API from that date to the present date<br>Enter start date followed by a slash and then an end date to get the Daily Normals between those two dates</p>"
+    return p+s+t+d
+
+@app.route("/api/v1.0/")
+def dailyNorms():
+    return "<p>Enter a start date at the end of the url for the Daily Normals API from that date to the present date<br>Enter start date followed by a slash and then an end date to get the Daily Normals between those two dates</p>"
+
 @app.route("/api/v1.0/precipitation")
 def precipitation():
     """Query for the dates and temperature observations from the last year.
         Convert the query results to a Dictionary using date as the key and tobs as the value.
         Return the json representation of your dictionary"""
     precipList = []
-    precip = session.query(Measurement.date, Measurement.tobs).filter(Measurement.date>='2016-08-23').order_by(Measurement.date).all()
+    precip = session.query(Station.name, Measurement.date, Measurement.prcp).filter(Measurement.station==Station.station).filter(Measurement.date>='2016-08-23').order_by(Measurement.date).all()
     for p in precip:
-        print({"date":p[0],"tobs":p[1]})
-        precipList.append({"date":p[0],"tobs":p[1]})
+        # print({"date":p[0],"tobs":p[1]})
+        precipList.append({"station":p[0],"date":p[1],"prcp":p[2]})
 
     return jsonify(precipList)
 
@@ -57,10 +69,10 @@ def tobs():
     # Return a json list of Temperature Observations (tobs) for the previous year
     lastDate = session.query(Measurement.date).order_by(Measurement.date.desc()).first()
     yearAgo = lastDate[0]- relativedelta(years=1)
-    tobs = session.query(Measurement.date, Measurement.tobs).filter(Measurement.date>=yearAgo).order_by(Measurement.date).all()
+    tobs = session.query(Station.name,Measurement.date, Measurement.tobs).filter(Measurement.station==Station.station).filter(Measurement.date>=yearAgo).order_by(Measurement.date).all()
     tobsList = []
     for t in tobs:
-        tobsList.append({"date":t[0],"tobs":t[1]})
+        tobsList.append({"station":t[0],"date":t[1],"temperature observation":t[2]})
     
     return jsonify(tobsList)
 
